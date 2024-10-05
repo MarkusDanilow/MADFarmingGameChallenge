@@ -7,7 +7,12 @@ export default class Engine {
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+
     private lastTime: number;
+    public fps: number = 0;
+    private frameCount: number = 0;
+    private fpsInterval: number = 1000; 
+    private fpsTime: number = 0;
 
     private game: Game | undefined;
 
@@ -19,8 +24,8 @@ export default class Engine {
 
         this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
         this.ctx.imageSmoothingEnabled = false;
-        
-        this.lastTime = 0;
+
+        this.lastTime = performance.now();
 
         InputHandler.initialize();
 
@@ -46,27 +51,53 @@ export default class Engine {
         const deltaTime = timestamp - this.lastTime;
         this.lastTime = timestamp;
 
+        this.calculateFPS(deltaTime);
+
         this.update(deltaTime);
         this.render();
 
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
+    private calculateFPS(deltaTime: number) {
+        this.frameCount++;
+        this.fpsTime += deltaTime;
+
+        if (this.fpsTime >= this.fpsInterval) {
+            this.fps = Math.floor(this.frameCount / (this.fpsTime / 1000)); 
+            this.frameCount = 0;
+            this.fpsTime = 0;
+        }
+    }
+
+
+
     private update(deltaTime: number) {
-        this.game?.update(deltaTime); 
+        this.game?.update(deltaTime);
     }
 
     private render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // translate by camera offset
-        this.ctx.save(); 
-        this.ctx.translate(Camera.position.x, Camera.position.y); 
+        this.ctx.save();
+        this.ctx.translate(Camera.position.x, Camera.position.y);
 
         // render game 
         this.game?.render(this.ctx);
 
-        this.ctx.restore(); 
+        this.ctx.restore();
+    
+        this.renderStats(); 
+    }
+
+    renderStats(){
+        this.ctx.fillStyle = "rgab(0,0,0,0.5)"
+        this.ctx.fillRect(0, 0, 200, 100); 
+
+        this.ctx.fillStyle = "white"; // Farbe des Textes
+        this.ctx.font = "20px Arial"; // Schriftart und Größe
+        this.ctx.fillText(`FPS: ${this.fps}`, 10, 30); // Text an Position (10, 30) rendern
     }
 
 }

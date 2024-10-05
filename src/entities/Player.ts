@@ -16,6 +16,7 @@ export class Player extends Entity {
         const tileSize = Util.getTileSize();
         this.size = new Vector2(tileSize, tileSize * 1.5);
         this.speed *= 1.15 ; 
+        this.position = new Vector2(200, 200); 
     }
 
     render(ctx: CanvasRenderingContext2D): void {

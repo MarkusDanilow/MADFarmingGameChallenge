@@ -11,6 +11,9 @@ export class Game implements IRenderable, IUpdatable {
 
     public static RENDER_DEV = false;
 
+    public msx: number = 64;
+    public msy: number = 32; 
+
     private map: Map;
     private player: Player;
 
@@ -18,40 +21,44 @@ export class Game implements IRenderable, IUpdatable {
      *
      */
     constructor() {
-
-        const msx = 64, msy = 32, tileSize = Util.getTileSize();
-        Camera.initMaxPos(new Vector2(msx, msy));
-
-        const mapSize = new Vector2(msx, msy); 
-
-        this.map = new Map(msx, msy);
+        Camera.initMaxPos(new Vector2(this.msx, this.msy));
+        const mapSize = new Vector2(this.msx, this.msy);
+        this.map = new Map(this.msx, this.msy);
         this.player = new Player(mapSize);
+        this.map.addEntity(this.player); 
+        this.createNpcs(50);
+    }
 
-        for (let index = 0; index < 1; index++) {
-            const randomTileX = Math.floor(Math.random() * msx);
-            const randomTileY = Math.floor(Math.random() * msy);
+    createNpcs(numNpcs: number) {
+        const tileSize = Util.getTileSize(); 
+        for (let index = 0; index < numNpcs; index++) {
+            const randomTileX = Math.floor(Math.random() * this.msx);
+            const randomTileY = Math.floor(Math.random() * this.msy);
             const x = randomTileX * tileSize;
             const y = randomTileY * tileSize;
-            const e = new NPC(mapSize);
-            e.position = new Vector2(250, 250); 
-            this.map.addEntity(e); 
+            const e = new NPC(new Vector2(this.msx, this.msy));
+            e.position = new Vector2(x, y);
+            this.map.addEntity(e);
         }
-
     }
 
     render(ctx: CanvasRenderingContext2D): void {
         this.map.render(ctx);
-        const entitiesBefore = this.map.entities.filter(e => e.getCenter().y < this.player.getCenter().y); 
-        const entitiesAfter = this.map.entities.filter(e => e.getCenter().y >= this.player.getCenter().y); 
-        entitiesBefore.forEach(e => e.render(ctx)); 
+        const npcs = this.map.entities.filter(e => e.uuid !== this.player.uuid); 
+        const entitiesBefore = npcs.filter(e => e.getCenter().y < this.player.getCenter().y);
+        const entitiesAfter = npcs.filter(e => e.getCenter().y >= this.player.getCenter().y);
+        entitiesBefore.forEach(e => e.render(ctx));
         this.player.render(ctx);
-        entitiesAfter.forEach(e => e.render(ctx)); 
+        entitiesAfter.forEach(e => e.render(ctx));
+
+        
+
     }
 
 
     update(deltaTime: number): void {
-        this.player.update(deltaTime, this.map);
-        this.map.update(deltaTime); 
+        // this.player.update(deltaTime, this.map);
+        this.map.update(deltaTime);
     }
 
 }

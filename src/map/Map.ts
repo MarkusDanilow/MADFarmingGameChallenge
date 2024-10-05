@@ -211,12 +211,12 @@ export class Map implements IRenderable, IUpdatable {
     findClosestEntity(srcEntity: Entity, entities: Entity[]): Entity | null {
         if (entities.length === 0) return null;
 
-        let closestEntity = entities[0];
-        let closestDistance = srcEntity.calculateDistance(closestEntity);
+        let closestEntity = entities[0].uuid == srcEntity.uuid ? null : entities[0];
+        let closestDistance = closestEntity !== null ?  srcEntity.calculateDistance(closestEntity) : Number.POSITIVE_INFINITY;
 
         for (let i = 1; i < entities.length; i++) {
             const distance = srcEntity.calculateDistance(entities[i]);
-            if (distance < closestDistance || srcEntity.uuid === closestEntity.uuid) {
+            if (distance < closestDistance && srcEntity.uuid !== entities[i].uuid) {
                 closestDistance = distance;
                 closestEntity = entities[i];
             }
