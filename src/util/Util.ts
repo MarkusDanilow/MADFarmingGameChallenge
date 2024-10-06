@@ -9,6 +9,10 @@ export class Util {
         return new Vector2(window.innerWidth, window.innerHeight);
     }
 
+    public static getCanvasSize() {
+        return this.getScreenSize(); 
+    }
+
     public static getTileSize() {
         const screenSize = Util.getScreenSize();
         return screenSize.x > screenSize.y ? Math.ceil(screenSize.x / Util.TILES_VISIBLE) : Math.ceil(screenSize.y / Util.TILES_VISIBLE);

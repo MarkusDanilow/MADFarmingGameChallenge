@@ -5,6 +5,7 @@ import { Util } from "../util/Util";
 import Vector2 from "../util/Vector2";
 import { Map } from "../map/Map";
 import { Entity } from "./Entity";
+import { TextureManager } from "../engine/TextureManager";
 
 export class Player extends Entity {
 
@@ -14,15 +15,11 @@ export class Player extends Entity {
     constructor(mapSize: Vector2) {
         super(mapSize);
         const tileSize = Util.getTileSize();
-        this.size = new Vector2(tileSize, tileSize * 1.5);
-        this.speed *= 1.15 ; 
+        this.size = new Vector2(tileSize, tileSize * 1.25);
+        this.speed *= 1.25 ; 
         this.position = new Vector2(200, 200); 
-    }
-
-    render(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.position.x, this.position.y, this.size.x, this.size.y);
-        super.render(ctx); 
+        this.animator.addAnimation("player_idle", 120); 
+        this.animator.setCurrentAnimation("player_idle"); 
     }
 
     update(deltaTime: number, map: Map): void {

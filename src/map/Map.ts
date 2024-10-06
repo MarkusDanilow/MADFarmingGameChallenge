@@ -1,4 +1,5 @@
 import { InputHandler } from "../engine/InputHandler";
+import { TextureManager } from "../engine/TextureManager";
 import { Entity } from "../entities/Entity";
 import { Game } from "../Game";
 import { IRenderable, IUpdatable } from "../IBasicInterfaces";
@@ -30,11 +31,11 @@ export class Tile implements IRenderable {
     }
 
     private genColor() {
-        if (this.collidable) this.color = '#6666aa';
+        if (this.collidable) this.color = '#333';
         else {
-            const green = Math.floor(Math.random() * (80 - 50) + 20);
-            const red = green;
-            const blue = green;
+            const green = Math.floor(Math.random() * (250 - 100) + 100);
+            const red = 0;
+            const blue = 0;
             this.color = `#${((1 << 24) + (red << 16) + (green << 8) + blue)
                 .toString(16)
                 .slice(1)}`;
@@ -42,8 +43,11 @@ export class Tile implements IRenderable {
     }
 
     render(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.color!;
-        ctx.fillRect(this.position.x, this.position.y, this.size.x + 0.5, this.size.y + 0.5);
+        // ctx.fillStyle = this.color!;
+        // ctx.fillRect(this.position.x, this.position.y, this.size.x + 0.5, this.size.y + 0.5);
+        const textureName = this.collidable ? "world_133" : "world_130";
+        const texture = TextureManager.getTexture(textureName)!;
+        ctx.drawImage(texture, this.position.x, this.position.y, this.size.x, this.size.y);
 
         if (!Game.RENDER_DEV || !this.collidable) return;
         ctx.strokeStyle = '#222';
@@ -96,6 +100,7 @@ export class Map implements IRenderable, IUpdatable {
         for (let i = 0; i < this.entities.length; i++) {
             this.entities[i].update(deltaTime, this); 
         }
+        this.sortEntities(); 
     }
 
     render(ctx: CanvasRenderingContext2D): void {
@@ -108,8 +113,14 @@ export class Map implements IRenderable, IUpdatable {
                 }
             }
         }
+        this.entities.forEach(e => {
+            e.render(ctx); 
+        })
     }
 
+    private sortEntities(){
+        this.entities = this.entities.sort((a, b) => a.getCenter().y - b.getCenter().y)
+    }
 
     public entityMoveCheck(entity: Entity, moveVector: Vector2): Vector2 {
 

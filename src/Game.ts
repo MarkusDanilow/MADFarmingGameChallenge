@@ -44,20 +44,10 @@ export class Game implements IRenderable, IUpdatable {
 
     render(ctx: CanvasRenderingContext2D): void {
         this.map.render(ctx);
-        const npcs = this.map.entities.filter(e => e.uuid !== this.player.uuid); 
-        const entitiesBefore = npcs.filter(e => e.getCenter().y < this.player.getCenter().y);
-        const entitiesAfter = npcs.filter(e => e.getCenter().y >= this.player.getCenter().y);
-        entitiesBefore.forEach(e => e.render(ctx));
-        this.player.render(ctx);
-        entitiesAfter.forEach(e => e.render(ctx));
-
-        
-
     }
 
 
     update(deltaTime: number): void {
-        // this.player.update(deltaTime, this.map);
         this.map.update(deltaTime);
     }
 

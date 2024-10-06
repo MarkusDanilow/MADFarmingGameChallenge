@@ -30,13 +30,11 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html',
     }),
-    /* 
     new CopyPlugin({
       patterns: [
         { from: 'assets', to: 'assets' },
       ],
     }),
-    */ 
     new webpack.HotModuleReplacementPlugin(),
   ],
   devServer: {

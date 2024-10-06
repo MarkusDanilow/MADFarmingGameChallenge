@@ -1,3 +1,4 @@
+import { Animator } from "../engine/Animator";
 import { Game } from "../Game";
 import { IMapUpdatable, IRenderable, IUpdatable } from "../IBasicInterfaces";
 import { Map } from "../map/Map";
@@ -19,21 +20,25 @@ export abstract class Entity implements IRenderable, IMapUpdatable {
     public collidable: boolean = true ; 
     public bb: BoundBox2D | undefined;
 
+    protected animator: Animator; 
+
     /**
      *
      */
     constructor(mapSize: Vector2) {
         this.mapSize = mapSize;
+        this.animator = new Animator(this); 
         this.uuid = Util.generateUuid(); 
     }
 
     public updateBB() {
-        const bbSize = new Vector2(this.size.x * 0.9, this.size.y / 2);
+        const bbSize = new Vector2(this.size.x * 0.9, this.size.y / 4);
         const offsetX = (this.size.x - bbSize.x) / 2
-        this.bb = new BoundBox2D(this.position.x + offsetX, this.position.y + this.size.y / 2, bbSize.x, bbSize.y);
+        this.bb = new BoundBox2D(this.position.x + offsetX, this.position.y + (this.size.y - bbSize.y), bbSize.x, bbSize.y);
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
+        this.animator.render(ctx); 
         if (!Game.RENDER_DEV) return;
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -42,6 +47,7 @@ export abstract class Entity implements IRenderable, IMapUpdatable {
 
     public update(deltaTime: number, map: Map): void {
         this.updateBB();
+        this.animator.update(deltaTime); 
     }
 
     protected move(deltaTime: number, moveVector: Vector2, map: Map): Vector2 {

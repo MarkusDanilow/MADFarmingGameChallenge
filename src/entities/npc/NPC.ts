@@ -1,3 +1,4 @@
+import { TextureManager } from "../../engine/TextureManager";
 import { Map } from "../../map/Map";
 import { Util } from "../../util/Util";
 import Vector2 from "../../util/Vector2";
@@ -12,20 +13,20 @@ export class NPC extends Entity {
     private pauseDuration: number = 0;
     private pauseTimer: number = 0;
 
+    private type: "goblin" | "skeleton";
+
     /**
      *
      */
     constructor(mapSize: Vector2) {
         super(mapSize);
+        this.type = Math.random() < 0.5 ? "goblin" : "skeleton"; 
         const tileSize = Util.getTileSize();
-        this.size = new Vector2(tileSize, tileSize * 1.5);
+        this.size = new Vector2(tileSize, this.type == "goblin" ? tileSize : (tileSize * 1.25));
         this.chooseNewDirection(); 
-    }
-
-    public render(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = '#0f0';
-        ctx.fillRect(this.position.x, this.position.y, this.size.x, this.size.y);
-        super.render(ctx); 
+        
+        this.animator.addAnimation(`${this.type}_idle`, 120 + (Math.random() * 25)); 
+        this.animator.setCurrentAnimation(`${this.type}_idle`); 
     }
 
     public update(deltaTime: number, map: Map): void {
