@@ -1,55 +1,144 @@
+import { AnimationType } from "./Animator";
+
+export interface TextureConfig { 
+    path: string;
+    rowsTotal: number;
+    colsTotal: number;
+}
+
+export interface TextureAtlasEntry {
+    textureConfig: TextureConfig; 
+    rowsOffset: number;
+    colsOffset: number;
+    rows: number;
+    cols: number;
+}
+
+const PlayerTextureConfig: TextureConfig = {
+    path: 'assets/player.png',
+    colsTotal: 6,
+    rowsTotal: 1
+}
+const NpcTextureConfig: TextureConfig = {
+    path: 'assets/npc.png',
+    colsTotal: 6,
+    rowsTotal: 1
+}
+
+const TextureAtlas: Map<string, TextureAtlasEntry> = new Map([
+    [`player_${AnimationType.IDLE}_side`, {
+        cols: 1,
+        rows: 1,
+        colsOffset: 4,
+        rowsOffset: 0,
+        textureConfig: PlayerTextureConfig
+    }],
+    [`player_${AnimationType.IDLE}_front`, {
+        cols: 1,
+        rows: 1,
+        colsOffset: 0,
+        rowsOffset: 0,
+        textureConfig: PlayerTextureConfig
+    }],
+    [`player_${AnimationType.RUN}_front`, {
+        cols: 4,
+        rows: 1,
+        colsOffset: 0,
+        rowsOffset: 0,
+        textureConfig: PlayerTextureConfig
+    }],
+    [`player_${AnimationType.RUN}_side`, {
+        cols: 2,
+        rows: 1,
+        colsOffset: 4,
+        rowsOffset: 0,
+        textureConfig: PlayerTextureConfig
+    }],
+
+    [`npc_${AnimationType.IDLE}_side`, {
+        cols: 1,
+        rows: 1,
+        colsOffset: 4,
+        rowsOffset: 0,
+        textureConfig: NpcTextureConfig
+    }],
+    [`npc_${AnimationType.IDLE}_front`, {
+        cols: 1,
+        rows: 1,
+        colsOffset: 0,
+        rowsOffset: 0,
+        textureConfig: NpcTextureConfig
+    }],
+    [`npc_${AnimationType.RUN}_front`, {
+        cols: 4,
+        rows: 1,
+        colsOffset: 0,
+        rowsOffset: 0,
+        textureConfig: NpcTextureConfig
+    }],
+    [`npc_${AnimationType.RUN}_side`, {
+        cols: 2,
+        rows: 1,
+        colsOffset: 4,
+        rowsOffset: 0,
+        textureConfig: NpcTextureConfig
+    }]
+]);
+
 export class TextureManager {
 
     private static textures: Map<string, HTMLCanvasElement | HTMLImageElement> = new Map(); // Speichert die geladenen Texturen
     private static numTextures: Map<string, number> = new Map();
 
     public static async loadAllTextures() {
-        await this.textureProcess("player_idle", "assets/Characters/Human/IDLE/base_idle_strip9.png", 1, 9);
-        await this.textureProcess("world", "assets/Tileset/spr_tileset_sunnysideworld_16px.png", 64, 64);
-        await this.textureProcess("goblin_idle", "assets/Characters/Goblin/spr_idle_strip9.png", 1, 8);
-        await this.textureProcess("skeleton_idle", "assets/Characters/Skeleton/skeleton_idle_strip6.png", 1, 6);
+        for(let animName of TextureAtlas.keys()){
+            await this.textureProcess(animName, TextureAtlas.get(animName)!);
+        }
     }
 
-    private static async textureProcess(name: string, path: string, rows: number, cols: number) {
-        const originalTexture = await TextureManager.loadTexture(name, path);
-        this.processTexture(name, originalTexture, rows, cols);
+    private static async textureProcess(name: string, atlasEntry: TextureAtlasEntry) {
+        const originalTexture = await TextureManager.loadTexture(name, atlasEntry.textureConfig.path);
+        this.processTexture(name, originalTexture, atlasEntry);
     }
 
-    private static processTexture(name: string, inTexture: HTMLImageElement, rows: number, cols: number) {
+    private static processTexture(name: string, inTexture: HTMLImageElement, atlasEntry: TextureAtlasEntry) {
 
-        const frameWidth = Math.floor(inTexture.width / cols);
-        const frameHeight = Math.floor(inTexture.height / rows);
+        const frameWidth = Math.floor(inTexture.width / atlasEntry.textureConfig.colsTotal);
+        const frameHeight = Math.floor(inTexture.height / atlasEntry.textureConfig.rowsTotal);
 
         let index = 0;
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
+        for (let row = atlasEntry.rowsOffset; row < atlasEntry.rowsOffset + atlasEntry.rows; row++) {
+            for (let col = atlasEntry.colsOffset; col < atlasEntry.colsOffset + atlasEntry.cols; col++) {
                 const srcCanvas = document.createElement('canvas');
                 srcCanvas.width = frameWidth;
                 srcCanvas.height = frameHeight;
 
                 const srcCtx = srcCanvas.getContext('2d')!;
                 srcCtx.drawImage(
-                    inTexture, 
-                    col * frameWidth, row * frameHeight, 
-                    frameWidth, frameHeight, 
-                    0, 0, 
-                    frameWidth, frameHeight 
+                    inTexture,
+                    col * frameWidth, row * frameHeight,
+                    frameWidth, frameHeight,
+                    0, 0,
+                    frameWidth, frameHeight
                 );
 
+                /*
                 const { width, height, minX, minY } = this.getActualSpriteSize(srcCtx, frameWidth, frameHeight);
 
                 const scaledCanvas = document.createElement('canvas');
-                scaledCanvas.width = width; 
+                scaledCanvas.width = width;
                 scaledCanvas.height = height;
                 const scaledContext = scaledCanvas.getContext('2d')!;
                 scaledContext.drawImage(
                     srcCanvas,
-                    minX, minY, 
+                    minX, minY,
                     width, height,
-                    0, 0, 
-                    width, height 
+                    0, 0,
+                    width, height
                 );
-                this.textures.set(`${name}_${++index}`, scaledCanvas);
+                */
+
+                this.textures.set(`${name}_${++index}`, srcCanvas);
 
             }
         }
@@ -58,8 +147,7 @@ export class TextureManager {
 
     }
 
-    private static getActualSpriteSize(context: CanvasRenderingContext2D, frameWidth: number, frameHeight: number): 
-        {width: number, height: number, minX: number, minY: number} {
+    private static getActualSpriteSize(context: CanvasRenderingContext2D, frameWidth: number, frameHeight: number): { width: number, height: number, minX: number, minY: number } {
 
         const imageData = context.getImageData(0, 0, frameWidth, frameHeight);
         const pixels = imageData.data;
@@ -84,7 +172,7 @@ export class TextureManager {
         const width = maxX - minX + 1;
         const height = maxY - minY + 1;
 
-        return { width: width, height: height, minX: minX, minY: minY};
+        return { width: width, height: height, minX: minX, minY: minY };
     }
 
     // Lädt eine Textur (PNG) asynchron und speichert sie
@@ -109,7 +197,7 @@ export class TextureManager {
         return this.textures.get(key);
     }
 
-    public static getNumTextures(keyPattern: string){
+    public static getNumTextures(keyPattern: string) {
         for (let key of this.numTextures.keys()) {
             if (key.startsWith(keyPattern)) {
                 return this.numTextures.get(key);
@@ -121,9 +209,10 @@ export class TextureManager {
     public static hasTexture(keyPattern: string): boolean {
         for (let key of this.numTextures.keys()) {
             if (key.startsWith(keyPattern)) {
+                console.log(keyPattern); 
                 return true;
             }
         }
-        return false; 
+        return false;
     }
 }

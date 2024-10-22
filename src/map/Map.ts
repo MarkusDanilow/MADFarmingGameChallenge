@@ -34,8 +34,8 @@ export class Tile implements IRenderable {
         if (this.collidable) this.color = '#333';
         else {
             const green = Math.floor(Math.random() * (250 - 100) + 100);
-            const red = 0;
-            const blue = 0;
+            const red = green;
+            const blue = green;
             this.color = `#${((1 << 24) + (red << 16) + (green << 8) + blue)
                 .toString(16)
                 .slice(1)}`;
@@ -43,11 +43,15 @@ export class Tile implements IRenderable {
     }
 
     render(ctx: CanvasRenderingContext2D): void {
-        // ctx.fillStyle = this.color!;
-        // ctx.fillRect(this.position.x, this.position.y, this.size.x + 0.5, this.size.y + 0.5);
+
         const textureName = this.collidable ? "world_133" : "world_130";
-        const texture = TextureManager.getTexture(textureName)!;
-        ctx.drawImage(texture, this.position.x, this.position.y, this.size.x, this.size.y);
+        const texture = TextureManager.getTexture(textureName);
+        if (texture !== undefined) {
+            ctx.drawImage(texture, this.position.x, this.position.y, this.size.x, this.size.y);
+        } else {
+            ctx.fillStyle = this.color!;
+            ctx.fillRect(this.position.x, this.position.y, this.size.x + 0.5, this.size.y + 0.5);
+        }
 
         if (!Game.RENDER_DEV || !this.collidable) return;
         ctx.strokeStyle = '#222';
@@ -98,9 +102,9 @@ export class Map implements IRenderable, IUpdatable {
 
     update(deltaTime: number): void {
         for (let i = 0; i < this.entities.length; i++) {
-            this.entities[i].update(deltaTime, this); 
+            this.entities[i].update(deltaTime, this);
         }
-        this.sortEntities(); 
+        this.sortEntities();
     }
 
     render(ctx: CanvasRenderingContext2D): void {
@@ -114,11 +118,11 @@ export class Map implements IRenderable, IUpdatable {
             }
         }
         this.entities.forEach(e => {
-            e.render(ctx); 
+            e.render(ctx);
         })
     }
 
-    private sortEntities(){
+    private sortEntities() {
         this.entities = this.entities.sort((a, b) => a.getCenter().y - b.getCenter().y)
     }
 
@@ -140,7 +144,7 @@ export class Map implements IRenderable, IUpdatable {
             }
         });
         const nearest = this.findClosestEntity(entity, this.entities);
-        if(nearest !== null){
+        if (nearest !== null) {
             collisionCheckObjects.push({
                 bb: nearest?.bb,
                 collidable: nearest?.collidable!
@@ -223,7 +227,7 @@ export class Map implements IRenderable, IUpdatable {
         if (entities.length === 0) return null;
 
         let closestEntity = entities[0].uuid == srcEntity.uuid ? null : entities[0];
-        let closestDistance = closestEntity !== null ?  srcEntity.calculateDistance(closestEntity) : Number.POSITIVE_INFINITY;
+        let closestDistance = closestEntity !== null ? srcEntity.calculateDistance(closestEntity) : Number.POSITIVE_INFINITY;
 
         for (let i = 1; i < entities.length; i++) {
             const distance = srcEntity.calculateDistance(entities[i]);

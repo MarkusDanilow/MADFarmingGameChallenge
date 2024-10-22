@@ -1,25 +1,18 @@
 import { Camera } from "../engine/Camera";
 import { InputHandler } from "../engine/InputHandler";
-import { IRenderable, IUpdatable } from "../IBasicInterfaces";
 import { Util } from "../util/Util";
 import Vector2 from "../util/Vector2";
 import { Map } from "../map/Map";
-import { Entity } from "./Entity";
-import { TextureManager } from "../engine/TextureManager";
+import { MovingEntity } from "./MovingEntity";
 
-export class Player extends Entity {
+export class Player extends MovingEntity {
 
     /**
      *
      */
     constructor(mapSize: Vector2) {
-        super(mapSize);
-        const tileSize = Util.getTileSize();
-        this.size = new Vector2(tileSize, tileSize * 1.25);
-        this.speed *= 1.25 ; 
+        super(mapSize, 1, new Vector2(1, 1), "player");
         this.position = new Vector2(200, 200); 
-        this.animator.addAnimation("player_idle", 120); 
-        this.animator.setCurrentAnimation("player_idle"); 
     }
 
     update(deltaTime: number, map: Map): void {

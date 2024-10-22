@@ -50,33 +50,7 @@ export abstract class Entity implements IRenderable, IMapUpdatable {
         this.animator.update(deltaTime); 
     }
 
-    protected move(deltaTime: number, moveVector: Vector2, map: Map): Vector2 {
-
-        moveVector.x *= deltaTime;
-        moveVector.y *= deltaTime;
-
-        const magnitude = Math.sqrt(moveVector.x * moveVector.x + moveVector.y * moveVector.y);
-
-        if (magnitude > 0) {
-            moveVector.x = (moveVector.x / magnitude) * this.speed;
-            moveVector.y = (moveVector.y / magnitude) * this.speed;
-        }
-
-        const tileSize = Util.getTileSize();
-
-        // check for map borders
-        if (this.position.x + moveVector.x < 0) moveVector.x = 0;
-        if (this.position.x + this.size.x + moveVector.x > this.mapSize.x * tileSize) moveVector.x = 0;
-        if (this.position.y + moveVector.y < 0) moveVector.y = 0;
-        if (this.position.y + this.size.y + moveVector.y > this.mapSize.y * tileSize) moveVector.y = 0;
-
-        // check for map collisions
-        moveVector = map.entityMoveCheck(this, moveVector);
-
-        this.position = this.position.add(moveVector);
-
-        return moveVector;
-    }
+    
 
     public getCenter(): Vector2 {
         return new Vector2(

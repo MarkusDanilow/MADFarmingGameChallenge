@@ -3,7 +3,7 @@ import Vector2 from "./Vector2";
 
 export class Util {
 
-    public static TILES_VISIBLE = 32;
+    public static TILES_VISIBLE = 16;
 
     public static getScreenSize() {
         return new Vector2(window.innerWidth, window.innerHeight);
