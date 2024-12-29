@@ -1,64 +1,107 @@
 import Vector2 from "../util/Vector2";
 
 type KeyState = {
-    [key: string]: boolean; // Speichert den Status jeder Taste
+    [key: string]: boolean; 
 };
 
 export class InputHandler {
+
+    static readonly KEY_A = 'A';
+    static readonly KEY_B = 'B';
+    static readonly KEY_C = 'C';
+    static readonly KEY_D = 'D';
+    static readonly KEY_E = 'E';
+    static readonly KEY_F = 'F';
+    static readonly KEY_G = 'G';
+    static readonly KEY_H = 'H';
+    static readonly KEY_I = 'I';
+    static readonly KEY_J = 'J';
+    static readonly KEY_K = 'K';
+    static readonly KEY_L = 'L';
+    static readonly KEY_M = 'M';
+    static readonly KEY_N = 'N';
+    static readonly KEY_O = 'O';
+    static readonly KEY_P = 'P';
+    static readonly KEY_Q = 'Q';
+    static readonly KEY_R = 'R';
+    static readonly KEY_S = 'S';
+    static readonly KEY_T = 'T';
+    static readonly KEY_U = 'U';
+    static readonly KEY_V = 'V';
+    static readonly KEY_W = 'W';
+    static readonly KEY_X = 'X';
+    static readonly KEY_Y = 'Y';
+    static readonly KEY_Z = 'Z';
+    static readonly KEY_ESCAPE = 'Escape';
+    static readonly KEY_ENTER = 'Enter';
+    static readonly KEY_SPACE = ' ';
+    static readonly KEY_SHIFT = 'Shift';
+    static readonly KEY_CTRL = 'Control';
+    static readonly KEY_ALT = 'Alt';
+    static readonly KEY_ARROW_UP = 'ArrowUp';
+    static readonly KEY_ARROW_DOWN = 'ArrowDown';
+    static readonly KEY_ARROW_LEFT = 'ArrowLeft';
+    static readonly KEY_ARROW_RIGHT = 'ArrowRight';
+
     private static keys: KeyState = {};
     private static mouseButtons: KeyState = {};
     private static mousePosition: Vector2 = new Vector2(0, 0);
+    private static previousKeys: Set<string> = new Set();
+    private static currentKeys: Set<string> = new Set();
+    private static pressedKeys: Set<string> = new Set();
 
-    // Statische Initialisierung des Event-Handlers
     static initialize() {
-        // Event-Listener für die Tastatur
         window.addEventListener('keydown', (event) => this.keyDown(event));
         window.addEventListener('keyup', (event) => this.keyUp(event));
 
-        // Event-Listener für die Maus
         window.addEventListener('mousedown', (event) => this.mouseDown(event));
         window.addEventListener('mouseup', (event) => this.mouseUp(event));
         window.addEventListener('mousemove', (event) => this.mouseMove(event));
     }
 
-    // Tastendruck Ereignis
     private static keyDown(event: KeyboardEvent) {
-        this.keys[event.key.toUpperCase()] = true; // Setze den Status der Taste auf gedrückt
+        this.keys[event.key.toUpperCase()] = true;
+        this.currentKeys.add(event.key.toUpperCase());
     }
 
-    // Tastenerlass Ereignis
     private static keyUp(event: KeyboardEvent) {
-        this.keys[event.key.toUpperCase()] = false; // Setze den Status der Taste auf nicht gedrückt
+        const key = event.key.toUpperCase();
+        this.keys[key] = false;
+        this.currentKeys.delete(key);
+        this.pressedKeys.add(key);
     }
 
-    // Mausklick Ereignis
     private static mouseDown(event: MouseEvent) {
-        this.mouseButtons[event.button] = true; // Setze den Status der Maustaste auf gedrückt
+        this.mouseButtons[event.button] = true;
     }
 
-    // Maus loslassen Ereignis
     private static mouseUp(event: MouseEvent) {
-        this.mouseButtons[event.button] = false; // Setze den Status der Maustaste auf nicht gedrückt
+        this.mouseButtons[event.button] = false;
     }
 
-    // Mausbewegung Ereignis
     private static mouseMove(event: MouseEvent) {
-        this.mousePosition.x = event.clientX; // Aktualisiere die X-Position der Maus
-        this.mousePosition.y = event.clientY; // Aktualisiere die Y-Position der Maus
+        this.mousePosition.x = event.clientX; 
+        this.mousePosition.y = event.clientY; 
     }
 
-    // Überprüfen, ob eine Taste gedrückt ist
+    static update() {
+        this.previousKeys = new Set(this.currentKeys);
+        this.pressedKeys.clear();
+    }
+
+    static isKeyPressed(key: string): boolean {
+        return this.pressedKeys.has(key.toUpperCase());
+    }
+
     static isKeyDown(key: string): boolean {
-        return !!this.keys[key.toUpperCase()]; // Rückgabe des Status der Taste
+        return !!this.keys[key.toUpperCase()]; 
     }
 
-    // Überprüfen, ob eine Maustaste gedrückt ist
     static isMouseButtonDown(button: number): boolean {
-        return !!this.mouseButtons[button]; // Rückgabe des Status der Maustaste
+        return !!this.mouseButtons[button]; 
     }
 
-    // Gibt die aktuelle Mausposition zurück
     static getMousePosition(): Vector2{
-        return this.mousePosition; // Rückgabe der aktuellen Mausposition
+        return this.mousePosition; 
     }
 }

@@ -18,10 +18,10 @@ export class MovingEntity extends Entity {
     }
 
     protected initAnimations(animBaseName: string){
-        this.animator.addAnimation(`${animBaseName}_${AnimationType.IDLE}_front`, this.speed * 12); 
-        this.animator.addAnimation(`${animBaseName}_${AnimationType.RUN}_front`, this.speed * 12); 
-        this.animator.addAnimation(`${animBaseName}_${AnimationType.IDLE}_side`, this.speed * 14); 
-        this.animator.addAnimation(`${animBaseName}_${AnimationType.RUN}_side`, this.speed * 14); 
+        this.animator.addAnimation(`${animBaseName}_${AnimationType.IDLE}_front`, 90); 
+        this.animator.addAnimation(`${animBaseName}_${AnimationType.RUN}_front`, 90); 
+        this.animator.addAnimation(`${animBaseName}_${AnimationType.IDLE}_side`, 110); 
+        this.animator.addAnimation(`${animBaseName}_${AnimationType.RUN}_side`, 110); 
         // this.animator.addAnimation(`${animBaseName}_${AnimationType.RUN}`, 90); 
         this.animator.setCurrentAnimation(`${animBaseName}_${AnimationType.IDLE}_front`); 
     }

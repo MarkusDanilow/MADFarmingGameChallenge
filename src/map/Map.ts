@@ -25,7 +25,7 @@ export class Tile implements IRenderable {
         this.size = new Vector2(size, size);
         this.index = new Vector2(x, y);
         this.position = new Vector2(size * x, size * y);
-        this.collidable = Math.random() < 0.1;
+        // this.collidable = Math.random() < 0.1;
         this.bb = this.collidable ? new BoundBox2D(this.position.x, this.position.y, size, size) : undefined;
         this.genColor();
     }
@@ -33,9 +33,9 @@ export class Tile implements IRenderable {
     private genColor() {
         if (this.collidable) this.color = '#333';
         else {
-            const green = Math.floor(Math.random() * (250 - 100) + 100);
-            const red = green;
-            const blue = green;
+            const green = Math.floor(Math.random() * (255 - 100) + 100);
+            const red = 0;
+            const blue = 0;
             this.color = `#${((1 << 24) + (red << 16) + (green << 8) + blue)
                 .toString(16)
                 .slice(1)}`;

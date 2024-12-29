@@ -101,10 +101,6 @@ export default class Engine {
     private render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // translate by camera offset
-        this.ctx.save();
-        this.ctx.translate(Camera.position.x, Camera.position.y);
-
         // render game 
         this.game?.render(this.ctx);
 
