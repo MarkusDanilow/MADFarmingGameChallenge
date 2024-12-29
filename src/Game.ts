@@ -1,4 +1,5 @@
 import { Camera } from "./engine/Camera";
+import { EngineAPI } from "./engine/Engine";
 import { InputHandler } from "./engine/InputHandler";
 import { Item } from "./entities/items/Item";
 import { NPC } from "./entities/living/npc/NPC";
@@ -43,11 +44,18 @@ export class Game implements IRenderable, IUpdatable {
 
         this.populateWorld();
 
+        this.toggleCursorStyle();
         // this.togglePauseScreen();
     }
 
     togglePauseScreen() {
         this.pauseScreen = this.gameState === "PAUSE" ? new PauseScreen(this) : undefined;
+        this.toggleCursorStyle(); 
+    }
+
+    toggleCursorStyle(){
+        const cursor = this.gameState === "PAUSE" ? "pointer" : "hand_hover";
+        EngineAPI.changeCursor(`assets/ui/cursors/${cursor}.png`);
     }
 
 

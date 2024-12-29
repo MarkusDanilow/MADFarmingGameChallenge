@@ -5,9 +5,38 @@ import { InputHandler } from "./InputHandler";
 import { LoadingScreen } from "./LoadingScreen";
 import { TextureManager } from "./TextureManager";
 
+export class EngineAPI {
+
+    private static engine: Engine;
+
+    public static registerEngine(e: Engine) {
+        this.engine = e;
+    }
+
+    public static changeCursor(path: string | undefined): void {
+        if (path === undefined) {
+            this.engine.cursor = undefined;
+            this.engine.canvas.style.cursor = "default";
+        } else {
+            const cursorImage = new Image();
+            cursorImage.src = path;
+            this.engine.cursor = cursorImage;
+            this.engine.canvas.style.cursor = "none";
+        }
+    }
+
+}
+
+
 export default class Engine {
 
-    private canvas: HTMLCanvasElement;
+    private _canvas!: HTMLCanvasElement;
+    public get canvas(): HTMLCanvasElement {
+        return this._canvas;
+    }
+    public set canvas(value: HTMLCanvasElement) {
+        this._canvas = value;
+    }
     private ctx: CanvasRenderingContext2D;
 
     private lastTime: number;
@@ -21,6 +50,14 @@ export default class Engine {
 
     private canRenderStats: boolean = false;
 
+    private _cursor: HTMLImageElement | undefined = undefined;
+    public get cursor(): HTMLImageElement | undefined {
+        return this._cursor;
+    }
+    public set cursor(value: HTMLImageElement | undefined) {
+        this._cursor = value;
+    }
+
     constructor(canvasId: string) {
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         if (!this.canvas) {
@@ -32,6 +69,9 @@ export default class Engine {
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         this.lastTime = performance.now();
+
+        EngineAPI.registerEngine(this);
+
     }
 
     public async initEngine() {
@@ -113,6 +153,14 @@ export default class Engine {
         this.ctx.restore();
         if (this.canRenderStats) {
             this.renderStats();
+        }
+
+        // render cursor
+        if (this.cursor !== undefined) {
+            const mousePos = InputHandler.getMousePosition();
+            // this.ctx.globalAlpha = 0.5;
+            this.ctx.drawImage(this.cursor, mousePos.x, mousePos.y, 48, 48);
+            // this.ctx.globalAlpha = 1.0;
         }
     }
 
