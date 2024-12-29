@@ -1,5 +1,5 @@
-import { Map } from "../../map/Map";
-import Vector2 from "../../util/Vector2";
+import { Map } from "../../../map/Map";
+import Vector2 from "../../../util/Vector2";
 import { MovingEntity } from "../MovingEntity";
 
 export class NPC extends MovingEntity {
@@ -27,10 +27,7 @@ export class NPC extends MovingEntity {
             if(move.x == 0 && move.y == 0) this.moveTimer = 0; 
             else this.moveTimer -= deltaTime;
         } else {
-            // Bewegung gestoppt, Timer für Pause runterzählen
             this.pauseTimer -= deltaTime;
-
-            // Wenn die Pause vorbei ist, wähle eine neue Richtung
             if (this.pauseTimer <= 0) {
                 this.chooseNewDirection();
             }

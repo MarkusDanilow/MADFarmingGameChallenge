@@ -17,7 +17,9 @@ export default class Engine {
     private fpsTime: number = 0;
 
     private game: Game | undefined;
-    loadingScreen?: LoadingScreen;
+    private loadingScreen?: LoadingScreen;
+
+    private canRenderStats: boolean = false;
 
     constructor(canvasId: string) {
         this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -56,7 +58,7 @@ export default class Engine {
     }
 
     private async loadTextures() {
-        await TextureManager.loadAllTextures(); 
+        await TextureManager.loadAllTextures();
     }
 
     private resizeCanvas() {
@@ -95,27 +97,33 @@ export default class Engine {
     }
 
     private update(deltaTime: number) {
+        if (InputHandler.isKeyPressed(InputHandler.KEY_F3)) {
+            this.canRenderStats = !this.canRenderStats;
+        }
+        if (InputHandler.isKeyPressed(InputHandler.KEY_F11)) {
+            Util.toggleFullScreen();
+        }
         this.game?.update(deltaTime);
+        InputHandler.update();
     }
 
     private render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // render game 
         this.game?.render(this.ctx);
-
         this.ctx.restore();
-
-        this.renderStats();
+        if (this.canRenderStats) {
+            this.renderStats();
+        }
     }
 
     renderStats() {
         this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)"
         this.ctx.fillRect(0, 0, 200, 100);
-
-        this.ctx.fillStyle = "white"; // Farbe des Textes
-        this.ctx.font = "20px Arial"; // Schriftart und Größe
-        this.ctx.fillText(`FPS: ${this.fps}`, 10, 30); // Text an Position (10, 30) rendern
+        this.ctx.fillStyle = "white";
+        this.ctx.font = "20px Consolas";
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(`FPS: ${this.fps}`, 10, 20);
     }
 
 }

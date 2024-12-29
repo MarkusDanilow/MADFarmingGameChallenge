@@ -209,7 +209,6 @@ export class TextureManager {
     public static hasTexture(keyPattern: string): boolean {
         for (let key of this.numTextures.keys()) {
             if (key.startsWith(keyPattern)) {
-                console.log(keyPattern); 
                 return true;
             }
         }

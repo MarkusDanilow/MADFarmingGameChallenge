@@ -38,7 +38,6 @@ export class Animator implements IUpdatable, IRenderable {
     }
 
     render(ctx: CanvasRenderingContext2D): void {
-        console.log(this.currentAnimation)
         if (this.currentAnimation === undefined) return;
         const anim = this.animations.get(this.currentAnimation);
         if (anim === undefined) return;

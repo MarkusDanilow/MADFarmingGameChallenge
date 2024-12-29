@@ -1,9 +1,11 @@
 import { Camera } from "./engine/Camera";
 import { InputHandler } from "./engine/InputHandler";
-import { NPC } from "./entities/npc/NPC";
-import { Player } from "./entities/Player";
+import { Item } from "./entities/items/Item";
+import { NPC } from "./entities/living/npc/NPC";
+import { Player } from "./entities/living/Player";
 import { IRenderable, IUpdatable } from "./IBasicInterfaces";
 import { Map } from "./map/Map";
+import { PauseScreen } from "./ui/screens/PauseScreen";
 import { Util } from "./util/Util";
 import Vector2 from "./util/Vector2";
 
@@ -13,13 +15,21 @@ export class Game implements IRenderable, IUpdatable {
 
     public static RENDER_DEV = false;
 
-    public State: GameState = "PAUSE";
+    private _gameState: GameState = "PLAY";
+    public get gameState(): GameState {
+        return this._gameState;
+    }
+    public set gameState(value: GameState) {
+        this._gameState = value;
+    }
 
     public mapTilesX: number = 64;
     public mapTilesY: number = 32;
 
     private map: Map;
     private player: Player;
+
+    private pauseScreen: PauseScreen | undefined = undefined;
 
     /**
      *
@@ -30,7 +40,20 @@ export class Game implements IRenderable, IUpdatable {
         this.map = new Map(this.mapTilesX, this.mapTilesY);
         this.player = new Player(mapSize);
         this.map.addEntity(this.player);
-        this.createNpcs(50);
+
+        this.populateWorld();
+
+        // this.togglePauseScreen();
+    }
+
+    togglePauseScreen() {
+        this.pauseScreen = this.gameState === "PAUSE" ? new PauseScreen(this) : undefined;
+    }
+
+
+    populateWorld() {
+        // this.createNpcs(50);
+        this.createItems(50);
     }
 
     createNpcs(numNpcs: number) {
@@ -46,6 +69,18 @@ export class Game implements IRenderable, IUpdatable {
         }
     }
 
+    createItems(numItems: number) {
+        const tileSize = Util.getTileSize();
+        for (let index = 0; index < numItems; index++) {
+            const randomTileX = Math.floor(Math.random() * this.mapTilesX);
+            const randomTileY = Math.floor(Math.random() * this.mapTilesY);
+            const x = randomTileX * tileSize;
+            const y = randomTileY * tileSize;
+            const e = new Item(new Vector2(this.mapTilesX, this.mapTilesY), new Vector2(x, y));
+            this.map.addEntity(e);
+        }
+    }
+
     render(ctx: CanvasRenderingContext2D): void {
         // if (this.State === "PLAY") {
         // translate by camera offset
@@ -57,27 +92,22 @@ export class Game implements IRenderable, IUpdatable {
         // render UI stuff
         ctx.restore();
 
-        if (this.State === "PAUSE") {
-            const size = Util.getCanvasSize();
-            ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-            ctx.fillRect(0, 0, size.x, size.y);
-            ctx.fillStyle = "#fff";
-            ctx.fillText("PAUSED", 200, 200);
+        if (this.gameState === "PAUSE") {
+            this.pauseScreen?.render(ctx);
         }
     }
 
 
     update(deltaTime: number): void {
-
-        if (InputHandler.isKeyPressed(InputHandler.KEY_ESCAPE)) {
-            this.State = this.State === "PLAY" ? "PAUSE" : "PLAY";
-        }
-
-        if (this.State === "PLAY") {
+        if (this.gameState === "PLAY") {
             this.map.update(deltaTime);
+            if (InputHandler.isKeyPressed(InputHandler.KEY_ESCAPE)) {
+                this.gameState = "PAUSE";
+                this.togglePauseScreen();
+            }
+        } else if (this.gameState === "PAUSE") {
+            this.pauseScreen?.update(deltaTime);
         }
-
-        InputHandler.update();
     }
 
 }

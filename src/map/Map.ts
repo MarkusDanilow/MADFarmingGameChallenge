@@ -1,9 +1,10 @@
 import { InputHandler } from "../engine/InputHandler";
 import { TextureManager } from "../engine/TextureManager";
 import { Entity } from "../entities/Entity";
+import { Item } from "../entities/items/Item";
 import { Game } from "../Game";
 import { IRenderable, IUpdatable } from "../IBasicInterfaces";
-import { BoundBox2D } from "../util/BB2D";
+import { BoundBox2D, CollisionCheckObject, CollisionResult, MoveCheckResult } from "../util/BB2D";
 import { Util } from "../util/Util";
 import Vector2 from "../util/Vector2";
 
@@ -34,8 +35,8 @@ export class Tile implements IRenderable {
         if (this.collidable) this.color = '#333';
         else {
             const green = Math.floor(Math.random() * (255 - 100) + 100);
-            const red = 0;
-            const blue = 0;
+            const red = green;
+            const blue = green;
             this.color = `#${((1 << 24) + (red << 16) + (green << 8) + blue)
                 .toString(16)
                 .slice(1)}`;
@@ -73,6 +74,7 @@ export class Map implements IRenderable, IUpdatable {
 
     private tiles: Tile[][];
     private size: Vector2;
+
     private _entities: Entity[];
     public get entities(): Entity[] {
         return this._entities;
@@ -99,6 +101,13 @@ export class Map implements IRenderable, IUpdatable {
     addEntity(e: Entity) {
         this.entities.push(e);
     }
+    
+    removeEntity(e: Entity) {
+        const index = this.entities.indexOf(e);
+        if (index > -1) {
+            this.entities.splice(index, 1); 
+        }
+    }
 
     update(deltaTime: number): void {
         for (let i = 0; i < this.entities.length; i++) {
@@ -123,12 +132,25 @@ export class Map implements IRenderable, IUpdatable {
     }
 
     private sortEntities() {
-        this.entities = this.entities.sort((a, b) => a.getCenter().y - b.getCenter().y)
+        this.entities = this.entities.sort((a, b) =>
+            (a.bb?.y! + a.bb?.height!) -
+            (b.bb?.y! + b.bb?.height!)
+        );
     }
 
-    public entityMoveCheck(entity: Entity, moveVector: Vector2): Vector2 {
+    /**
+     * 
+     * @param entity 
+     * @param moveVector 
+     * @returns 
+     */
+    public entityMoveCheck(entity: Entity, moveVector: Vector2): MoveCheckResult {
 
-        if (entity.bb === undefined) return Vector2.ZERO;
+        if (entity.bb === undefined) return {
+            collidingEntities: [],
+            collidingTiles: [],
+            moveVector: Vector2.ZERO
+        };
 
         const entityBBCenter = entity.bb?.getCenter()!;
         const entityPos = new Vector2(entity.bb?.x!, entity.bb?.y!);
@@ -137,35 +159,51 @@ export class Map implements IRenderable, IUpdatable {
         const targetX = entityPos.x + moveVector.x;
         const targetY = entityPos.y + moveVector.y;
 
-        const collisionCheckObjects = this.getSurroundingTiles(tilePos.x, tilePos.y).map(t => {
+        const collisionCheckObjects: CollisionCheckObject[] = this.getSurroundingTiles(tilePos.x, tilePos.y).map(t => {
             return {
                 collidable: t.collidable,
-                bb: t.bb
+                bb: t.bb,
+                obj: t
             }
         });
         const nearest = this.findClosestEntity(entity, this.entities);
         if (nearest !== null) {
             collisionCheckObjects.push({
                 bb: nearest?.bb,
-                collidable: nearest?.collidable!
+                collidable: nearest?.collidable!,
+                obj: nearest
             });
         }
 
         let newBoundingBoxX = new BoundBox2D(targetX, entityPos.y, entity.bb?.width, entity.bb?.height);
         let newBoundingBoxY = new BoundBox2D(entityPos.x, targetY, entity.bb?.width, entity.bb?.height);
 
+        const moveCheckResult: MoveCheckResult = {
+            collidingEntities: [],
+            collidingTiles: [],
+            moveVector: moveVector
+        }
         for (const obj of collisionCheckObjects) {
-            moveVector = this.collisionCheckCore(
+            const collisionResult = this.collisionCheckCore(
                 targetX, targetY,
                 entity.collidable, entity.bb,
                 newBoundingBoxX, newBoundingBoxY,
-                obj.collidable, obj.bb,
-                moveVector
+                obj, moveVector
             );
+            moveVector = collisionResult.vector;
+            if (collisionResult.entity !== undefined) {
+                if (collisionResult.entity instanceof Entity) {
+                    moveCheckResult.collidingEntities.push(collisionResult.entity);
+                } else if (collisionResult.entity instanceof Tile) {
+                    moveCheckResult.collidingTiles.push(collisionResult.entity);
+                }
+            }
             if (moveVector.x === 0 && moveVector.y === 0) break;
         }
 
-        return moveVector;
+        moveCheckResult.moveVector = moveVector;
+
+        return moveCheckResult;
     }
 
     private collisionCheckCore(
@@ -173,28 +211,39 @@ export class Map implements IRenderable, IUpdatable {
         srcCollidable: boolean,
         srcEntityBb: BoundBox2D | undefined,
         srcNewBbX: BoundBox2D, srcNewBbY: BoundBox2D,
-        destCollidable: boolean,
-        destEntityBb: BoundBox2D | undefined, srcMoveVector: Vector2): Vector2 {
+        destCollisionCheckObj: CollisionCheckObject,
+        srcMoveVector: Vector2): CollisionResult {
 
-        if (!srcCollidable || !destCollidable || srcEntityBb === undefined || destEntityBb === undefined) return srcMoveVector;
+        if (!srcCollidable || !destCollisionCheckObj.collidable || srcEntityBb === undefined || destCollisionCheckObj.bb === undefined)
+            return {
+                vector: srcMoveVector,
+                entity: undefined
+            };
 
-        if (destEntityBb.intersects(srcNewBbX)) {
-            if (srcMoveVector.x > 0 && targetX + srcEntityBb.width > destEntityBb.x) {
-                srcMoveVector.x = destEntityBb.x - (srcEntityBb.x + srcEntityBb.width);
-            } else if (srcMoveVector.x < 0 && targetX < destEntityBb.x + destEntityBb.width) {
-                srcMoveVector.x = -(srcEntityBb.x - (destEntityBb.x + destEntityBb.width));
+        let collisionResult: CollisionResult = {
+            vector: srcMoveVector,
+            entity: undefined
+        }
+
+        if (destCollisionCheckObj.bb.intersects(srcNewBbX)) {
+            collisionResult.entity = destCollisionCheckObj.obj;
+            if (srcMoveVector.x > 0 && targetX + srcEntityBb.width > destCollisionCheckObj.bb.x) {
+                collisionResult.vector.x = destCollisionCheckObj.bb.x - (srcEntityBb.x + srcEntityBb.width);
+            } else if (srcMoveVector.x < 0 && targetX < destCollisionCheckObj.bb.x + destCollisionCheckObj.bb.width) {
+                collisionResult.vector.x = -(srcEntityBb.x - (destCollisionCheckObj.bb.x + destCollisionCheckObj.bb.width));
             }
         }
 
-        if (destEntityBb.intersects(srcNewBbY)) {
-            if (srcMoveVector.y > 0 && targetY + srcEntityBb.height > destEntityBb.y) {
-                srcMoveVector.y = destEntityBb.y - (srcEntityBb.y + srcEntityBb.height);
-            } else if (srcMoveVector.y < 0 && targetY < destEntityBb.y + destEntityBb.height) {
-                srcMoveVector.y = -(srcEntityBb.y - (destEntityBb.y + destEntityBb.height));
+        if (destCollisionCheckObj.bb.intersects(srcNewBbY)) {
+            collisionResult.entity = destCollisionCheckObj.obj;
+            if (srcMoveVector.y > 0 && targetY + srcEntityBb.height > destCollisionCheckObj.bb.y) {
+                collisionResult.vector.y = destCollisionCheckObj.bb.y - (srcEntityBb.y + srcEntityBb.height);
+            } else if (srcMoveVector.y < 0 && targetY < destCollisionCheckObj.bb.y + destCollisionCheckObj.bb.height) {
+                collisionResult.vector.y = -(srcEntityBb.y - (destCollisionCheckObj.bb.y + destCollisionCheckObj.bb.height));
             }
         }
 
-        return srcMoveVector;
+        return collisionResult;
     }
 
     /**

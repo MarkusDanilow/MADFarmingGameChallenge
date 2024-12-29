@@ -1,3 +1,5 @@
+import { Entity } from "../entities/Entity";
+import { Tile } from "../map/Map";
 import Vector2 from "./Vector2";
 
 export class BoundBox2D {
@@ -73,7 +75,25 @@ export class BoundBox2D {
     }
 
     public getCenter(): Vector2 {
-        return new Vector2(this.x + this.width / 2, this.y + this.height / 2); 
+        return new Vector2(this.x + this.width / 2, this.y + this.height / 2);
     }
-    
+
+}
+
+export type CollisionCheckObject = {
+    collidable: boolean,
+    bb: BoundBox2D | undefined,
+    obj: Entity | Tile
+}
+
+
+export type CollisionResult = {
+    vector: Vector2,
+    entity: Entity | Tile | undefined;
+}
+
+export type MoveCheckResult = {
+    collidingTiles: Tile[],
+    collidingEntities: Entity[],
+    moveVector: Vector2
 }

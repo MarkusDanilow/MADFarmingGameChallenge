@@ -42,6 +42,22 @@ export class InputHandler {
     static readonly KEY_ARROW_DOWN = 'ArrowDown';
     static readonly KEY_ARROW_LEFT = 'ArrowLeft';
     static readonly KEY_ARROW_RIGHT = 'ArrowRight';
+    static readonly KEY_F1 = 'F1';
+    static readonly KEY_F2 = 'F2';
+    static readonly KEY_F3 = 'F3';
+    static readonly KEY_F4 = 'F4';
+    static readonly KEY_F5 = 'F5';
+    static readonly KEY_F6 = 'F6';
+    static readonly KEY_F7 = 'F7';
+    static readonly KEY_F8 = 'F8';
+    static readonly KEY_F9 = 'F9';
+    static readonly KEY_F10 = 'F10';
+    static readonly KEY_F11 = 'F11';
+    static readonly KEY_F12 = 'F12';
+    
+    static readonly MOUSE_BUTTON_LEFT = 0;
+    static readonly MOUSE_BUTTON_MIDDLE = 1;
+    static readonly MOUSE_BUTTON_RIGHT = 2;
 
     private static keys: KeyState = {};
     private static mouseButtons: KeyState = {};
@@ -49,6 +65,7 @@ export class InputHandler {
     private static previousKeys: Set<string> = new Set();
     private static currentKeys: Set<string> = new Set();
     private static pressedKeys: Set<string> = new Set();
+    private static clickedMouseButtons: Set<number> = new Set();
 
     static initialize() {
         window.addEventListener('keydown', (event) => this.keyDown(event));
@@ -60,11 +77,13 @@ export class InputHandler {
     }
 
     private static keyDown(event: KeyboardEvent) {
+        event.preventDefault(); 
         this.keys[event.key.toUpperCase()] = true;
         this.currentKeys.add(event.key.toUpperCase());
     }
 
     private static keyUp(event: KeyboardEvent) {
+        event.preventDefault(); 
         const key = event.key.toUpperCase();
         this.keys[key] = false;
         this.currentKeys.delete(key);
@@ -77,6 +96,7 @@ export class InputHandler {
 
     private static mouseUp(event: MouseEvent) {
         this.mouseButtons[event.button] = false;
+        this.clickedMouseButtons.add(event.button);
     }
 
     private static mouseMove(event: MouseEvent) {
@@ -87,6 +107,7 @@ export class InputHandler {
     static update() {
         this.previousKeys = new Set(this.currentKeys);
         this.pressedKeys.clear();
+        this.clickedMouseButtons.clear();
     }
 
     static isKeyPressed(key: string): boolean {
@@ -99,6 +120,10 @@ export class InputHandler {
 
     static isMouseButtonDown(button: number): boolean {
         return !!this.mouseButtons[button]; 
+    }
+
+    static isMouseButtonClicked(button: number): boolean {
+        return this.clickedMouseButtons.has(button);
     }
 
     static getMousePosition(): Vector2{
